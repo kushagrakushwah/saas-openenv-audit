@@ -1,12 +1,5 @@
 """
 app.py — FastAPI entrypoint for EnvAudit.
-
-ROOT CAUSE OF 422 FIX:
-  The original code used openenv's create_fastapi_app() which internally
-  wraps the request body under an "action" key that the Action model doesn't
-  match against. By writing raw FastAPI routes with an explicit ActionBody
-  Pydantic model we control the exact deserialization — no more 422s.
-
 ROUTE MAP:
   Root (task1_easy default — satisfies `openenv validate` ping):
     POST /reset
@@ -190,3 +183,7 @@ async def info():
             },
         },
     })
+import uvicorn
+
+def start():
+    uvicorn.run("server.app:app", host="0.0.0.0", port=7860)
