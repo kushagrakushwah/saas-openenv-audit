@@ -1,13 +1,9 @@
 """
 graders.py — Deterministic programmatic graders for all three tasks.
 
-Each grader takes the final AuditState and returns a score in [0.0, 1.0].
-
-Task 1 (Easy)   : 1.0 if the single correct seat is cancelled, 0.0 otherwise.
-Task 2 (Medium) : +0.2 per correct cancellation (max 1.0); immediate 0.0 if
-                  any active user is cancelled.
-Task 3 (Hard)   : immediate 0.0 if any trap is triggered; otherwise partial
-                  credit = correct_cancellations / total_safe (max 1.0).
+Each grader takes the final AuditState and returns a score.
+Note: The final output is clamped to strictly (0, 1) to satisfy Phase 2 
+validation rules (e.g., 0.01 to 0.99).
 """
 from typing import Set
 
@@ -68,8 +64,15 @@ GRADERS = {
 
 
 def grade(state: AuditState) -> float:
-    """Dispatch to the correct grader based on state.task_name."""
+    """Dispatch to the correct grader based on state.task_name and clamp to (0, 1)."""
     grader = GRADERS.get(state.task_name)
     if grader is None:
         raise ValueError(f"No grader registered for task '{state.task_name}'")
-    return grader(state)
+    
+    raw_score = grader(state)
+    
+    # Phase 2 Validator Fix: 
+    # Force the score strictly between 0 and 1 (0.01 min, 0.99 max)
+    clamped_score = max(0.01, min(0.99, float(raw_score)))
+    
+    return clamped_score
