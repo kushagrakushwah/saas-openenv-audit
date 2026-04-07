@@ -10,6 +10,7 @@ Usage (server must be running):
     python train.py
 """
 import random
+
 from client import AuditEnv
 from models import AuditAction
 
@@ -25,8 +26,8 @@ TASK_URLS = {
 # ---------------------------------------------------------------------------
 
 class RandomPolicy:
-    """Randomly selects a tool each step — mostly noisy, used as lower bound."""
-    name = "🎲 Random"
+    """Randomly selects a tool each step — lower-bound baseline."""
+    name = "Random"
     TOOLS = [
         "get_employee_logins", "get_billing_line_items",
         "query_software_metadata", "check_contract_terms",
@@ -55,45 +56,46 @@ class RuleBasedPolicy:
     Phase 4: cancel seats that pass all safety checks
     Phase 5: finish
     """
-    name = "🧠 Rule-Based"
+    name = "Rule-Based"
 
     def reset(self):
-        self._phase       = "get_logins"
-        self._logins      = {}     # software_id -> days_since_last_login
-        self._billing     = {}     # software_id -> {cost, contract_type}
-        self._metadata    = {}     # software_id -> service_type
-        self._contracts   = {}     # software_id -> early_cancel_fee
-        self._to_inspect  = []
-        self._to_check    = []
-        self._to_cancel   = []
-        self._inspected   = set()
+        self._phase            = "get_logins"
+        self._logins           = {}
+        self._billing          = {}
+        self._metadata         = {}
+        self._contracts        = {}
+        self._to_inspect       = []
+        self._to_check         = []
+        self._to_cancel        = []
+        self._inspected        = set()
         self._contract_checked = set()
 
     def select_action(self, obs) -> AuditAction:
         tr = obs.tool_result if hasattr(obs, "tool_result") else {}
 
-        # Absorb tool results
         if "employee_login_records" in tr:
             for rec in tr["employee_login_records"]:
                 self._logins[rec["software_id"]] = rec["days_since_last_login"]
+
         if "billing_line_items" in tr:
             for item in tr["billing_line_items"]:
                 self._billing[item["software_id"]] = {
                     "cost":          item["monthly_cost_usd"],
                     "contract_type": item["contract_type"],
                 }
+
         if "service_type" in tr:
             sid = tr.get("software_id")
             if sid:
                 self._metadata[sid] = tr["service_type"]
                 self._inspected.add(sid)
+
         if "contract_type" in tr and "early_cancellation_fee_usd" in tr:
             sid = tr.get("software_id")
             if sid:
                 self._contracts[sid] = tr["early_cancellation_fee_usd"]
                 self._contract_checked.add(sid)
 
-        # Phase machine
         if self._phase == "get_logins":
             self._phase = "get_billing"
             return AuditAction(tool="get_employee_logins")
@@ -107,12 +109,10 @@ class RuleBasedPolicy:
             if self._to_inspect:
                 sid = self._to_inspect.pop(0)
                 return AuditAction(tool="query_software_metadata", software_id=sid)
-            # Done inspecting — figure out candidates
-            candidates = []
-            for sid, days in self._logins.items():
-                if days > 30 and self._metadata.get(sid) != "service_account":
-                    candidates.append(sid)
-            # Split: annual needs contract check, monthly can cancel directly
+            candidates = [
+                sid for sid, days in self._logins.items()
+                if days > 30 and self._metadata.get(sid) != "service_account"
+            ]
             self._to_check  = [s for s in candidates
                                 if self._billing.get(s, {}).get("contract_type") == "annual"]
             self._to_cancel = [s for s in candidates
@@ -123,7 +123,6 @@ class RuleBasedPolicy:
             if self._to_check:
                 sid = self._to_check.pop(0)
                 return AuditAction(tool="check_contract_terms", software_id=sid)
-            # Move annual candidates with zero fee to cancel list
             for sid in self._contract_checked:
                 if self._contracts.get(sid, 1) == 0.0:
                     self._to_cancel.append(sid)
@@ -131,8 +130,10 @@ class RuleBasedPolicy:
 
         if self._phase == "cancel":
             if self._to_cancel:
-                return AuditAction(tool="execute_cancellation",
-                                   software_id=self._to_cancel.pop(0))
+                return AuditAction(
+                    tool="execute_cancellation",
+                    software_id=self._to_cancel.pop(0),
+                )
             self._phase = "finish"
 
         return AuditAction(tool="finish")
@@ -142,7 +143,7 @@ class RuleBasedPolicy:
 # Episode runner
 # ---------------------------------------------------------------------------
 
-def run_episode(env, policy) -> float:
+def run_episode(env: AuditEnv, policy) -> float:
     policy.reset()
     result = env.reset()
     final_reward = 0.0
@@ -156,13 +157,15 @@ def run_episode(env, policy) -> float:
             f"{action.tool:<28} "
             f"{'(' + action.software_id + ')' if action.software_id else '':<12} "
             f"reward={result.reward:+.3f}"
-            + (f"  ⚠ {error[:60]}" if error else "")
+            + (f"  [!] {error[:60]}" if error else "")
         )
         if result.observation.done:
-            final_reward = result.observation.tool_result.get("grader_score", result.reward)
+            final_reward = result.observation.tool_result.get(
+                "grader_score", result.reward
+            )
             break
 
-    print(f"  → Grader score: {final_reward:.4f}\n")
+    print(f"  -> Grader score: {final_reward:.4f}\n")
     return final_reward
 
 

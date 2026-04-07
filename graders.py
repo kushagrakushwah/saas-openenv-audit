@@ -11,20 +11,12 @@ Task 3 (Hard)   : immediate 0.0 if any trap is triggered; otherwise partial
 """
 from typing import Set
 
-try:
-    from .models import AuditState
-    from .scenarios import (
-        TASK1_EASY_TARGET_ID,
-        TASK2_MEDIUM_SAFE_IDS, TASK2_MEDIUM_ACTIVE_IDS,
-        TASK3_HARD_SAFE_IDS, TASK3_HARD_TRAP_IDS,
-    )
-except ImportError:
-    from models import AuditState
-    from scenarios import (
-        TASK1_EASY_TARGET_ID,
-        TASK2_MEDIUM_SAFE_IDS, TASK2_MEDIUM_ACTIVE_IDS,
-        TASK3_HARD_SAFE_IDS, TASK3_HARD_TRAP_IDS,
-    )
+from models import AuditState
+from scenarios import (
+    TASK1_EASY_TARGET_ID,
+    TASK2_MEDIUM_SAFE_IDS, TASK2_MEDIUM_ACTIVE_IDS,
+    TASK3_HARD_SAFE_IDS, TASK3_HARD_TRAP_IDS,
+)
 
 
 def grade_task1(state: AuditState) -> float:
@@ -45,7 +37,6 @@ def grade_task2(state: AuditState) -> float:
     """
     cancelled: Set[str] = set(state.cancelled_ids)
 
-    # Hard fail: active user cancelled
     if cancelled & TASK2_MEDIUM_ACTIVE_IDS:
         return 0.0
 
@@ -61,7 +52,6 @@ def grade_task3(state: AuditState) -> float:
     """
     cancelled: Set[str] = set(state.cancelled_ids)
 
-    # Hard fail: any trap triggered
     if cancelled & TASK3_HARD_TRAP_IDS:
         return 0.0
 

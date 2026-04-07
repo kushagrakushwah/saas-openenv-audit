@@ -1,70 +1,125 @@
 """
-Typed Pydantic models for the SaaS Audit environment.
-Follows the OpenEnv spec: Action, Observation, State base classes.
+client.py — Typed HTTP client for the SaaS Audit environment.
+
+No dependency on openenv-core — uses plain `requests` so it works
+regardless of openenv-core version.
+
+Usage (server must already be running):
+    from client import AuditEnv
+    from models import AuditAction
+
+    with AuditEnv(base_url="http://localhost:7860/task1_easy") as env:
+        result = env.reset()
+        result = env.step(AuditAction(tool="get_employee_logins"))
+        print(result.observation, result.reward, result.done)
 """
-from typing import Any, Dict, List, Optional
-from openenv.core.env_server import Action, Observation, State
+from __future__ import annotations
+
+import contextlib
+from dataclasses import dataclass, field
+from typing import Any, Dict, Optional
+
+import requests
+
+from models import AuditAction, AuditObservation, AuditState
 
 
-# ---------------------------------------------------------------------------
-# Action
-# ---------------------------------------------------------------------------
-
-class AuditAction(Action):
-    """
-    The agent's discrete tool call each step.
-
-    tool: one of
-        "get_employee_logins"     → returns all employee login records
-        "get_billing_line_items"  → returns all active subscription seats
-        "query_software_metadata" → metadata for a specific software_id
-        "check_contract_terms"    → contract + penalty info for a software_id
-        "execute_cancellation"    → cancel a seat/subscription by software_id
-        "finish"                  → agent signals task complete
-
-    software_id: required for query_software_metadata, check_contract_terms,
-                 execute_cancellation. Ignored otherwise.
-    """
-    tool: str
-    software_id: Optional[str] = None
-    metadata: Dict[str, Any] = {}
-
-
-# ---------------------------------------------------------------------------
-# Observation
-# ---------------------------------------------------------------------------
-
-class AuditObservation(Observation):
-    """
-    What the agent receives after each action.
-
-    tool_result         : JSON payload from the called tool.
-    last_action_error   : human-readable error string, or None if no error.
-    step                : step counter within this episode.
-    done                : whether the episode has ended.
-    reward              : reward earned THIS step (partial signal).
-    """
-    tool_result: Dict[str, Any] = {}
-    last_action_error: Optional[str] = None
-    step: int = 0
-    done: bool = False
+@dataclass
+class StepResult:
+    """Mirrors the OpenEnv StepResult interface."""
+    observation: AuditObservation
     reward: float = 0.0
-    metadata: Dict[str, Any] = {}
+    done: bool = False
+    info: Dict[str, Any] = field(default_factory=dict)
 
 
-# ---------------------------------------------------------------------------
-# State  (internal ground-truth — exposed at /state endpoint)
-# ---------------------------------------------------------------------------
+class AuditEnv:
+    """
+    Synchronous HTTP client for AuditEnvironment.
 
-class AuditState(State):
-    episode_id: Optional[str] = None
-    step_count: int = 0
-    task_name: str = "task1_easy"
-    cancelled_ids: List[str] = []
-    total_savings: float = 0.0
-    penalty_points: float = 0.0
-    # trap flags
-    critical_service_cancelled: bool = False
-    early_cancellation_penalty_triggered: bool = False
-    # grader score (0.0–1.0) — set when done=True
-    grader_score: float = 0.0
+    Context-manager usage:
+        with AuditEnv(base_url="http://localhost:7860/task1_easy") as env:
+            result = env.reset()
+
+    .sync() alias for compatibility with train.py's:
+        with AuditEnv(base_url=url).sync() as env:
+    """
+
+    def __init__(
+        self,
+        base_url: str = "http://localhost:7860/task1_easy",
+        timeout: int = 30,
+    ):
+        self.base_url = base_url.rstrip("/")
+        self.timeout  = timeout
+        self._session = requests.Session()
+
+    # ------------------------------------------------------------------ #
+    # Context-manager & cleanup                                            #
+    # ------------------------------------------------------------------ #
+
+    def __enter__(self) -> "AuditEnv":
+        return self
+
+    def __exit__(self, *_) -> None:
+        self.close()
+
+    def sync(self) -> "AuditEnv":
+        """Alias — allows `with AuditEnv(...).sync() as env:` pattern."""
+        return self
+
+    def close(self) -> None:
+        with contextlib.suppress(Exception):
+            self._session.close()
+
+    # ------------------------------------------------------------------ #
+    # OpenEnv interface                                                    #
+    # ------------------------------------------------------------------ #
+
+    def reset(self) -> StepResult:
+        resp = self._session.post(f"{self.base_url}/reset", timeout=self.timeout)
+        resp.raise_for_status()
+        return self._parse(resp.json())
+
+    def step(self, action: AuditAction) -> StepResult:
+        payload: Dict[str, Any] = {
+            "tool":     action.tool,
+            "metadata": action.metadata or {},
+        }
+        if action.software_id is not None:
+            payload["software_id"] = action.software_id
+
+        resp = self._session.post(
+            f"{self.base_url}/step",
+            json=payload,
+            timeout=self.timeout,
+        )
+        resp.raise_for_status()
+        return self._parse(resp.json())
+
+    def get_state(self) -> AuditState:
+        resp = self._session.get(f"{self.base_url}/state", timeout=self.timeout)
+        resp.raise_for_status()
+        return AuditState(**resp.json())
+
+    # ------------------------------------------------------------------ #
+    # Internal                                                             #
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _parse(payload: dict) -> StepResult:
+        obs_data = payload.get("observation", payload)
+        observation = AuditObservation(
+            tool_result=obs_data.get("tool_result", {}),
+            last_action_error=obs_data.get("last_action_error"),
+            step=obs_data.get("step", 0),
+            done=obs_data.get("done", False),
+            reward=obs_data.get("reward", 0.0),
+            metadata=obs_data.get("metadata", {}),
+        )
+        return StepResult(
+            observation=observation,
+            reward=payload.get("reward", 0.0),
+            done=payload.get("done", False),
+            info=payload.get("info", {}),
+        )

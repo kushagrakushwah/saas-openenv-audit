@@ -1,11 +1,10 @@
 """
 scenarios.py — Static scenario data for all three tasks.
 
-Each scenario is a list of software subscription dicts.
-The grader reads the ground-truth fields at episode end:
+Ground-truth fields used by graders:
     is_safe_to_cancel   : bool  — correct to cancel
-    is_critical         : bool  — cancelling = immediate fail
-    is_annual_trap      : bool  — annual contract with a cancellation fee
+    is_critical         : bool  — cancelling = immediate fail (service account trap)
+    is_annual_trap      : bool  — annual contract with large cancellation fee
     early_cancel_fee    : float — fee in USD if annual and cancelled early
 """
 from typing import Dict, List
@@ -13,10 +12,8 @@ from typing import Dict, List
 
 # ---------------------------------------------------------------------------
 # TASK 1 — EASY  :  The Basic Join
-#
-# One clearly inactive user (60+ days), rest are active.
-# Pure cross-reference task. No traps.
-# Grader: 1.0 if the single inactive seat is cancelled, 0.0 otherwise.
+# One clearly inactive user (72 days), rest are active.
+# Grader: 1.0 if sw_001 cancelled, 0.0 otherwise.
 # ---------------------------------------------------------------------------
 TASK1_EASY: List[Dict] = [
     {
@@ -53,16 +50,14 @@ TASK1_EASY: List[Dict] = [
     },
 ]
 
-TASK1_EASY_TARGET_ID  = "sw_001"   # the one correct cancellation
-TASK1_EASY_MAX_STEPS  = 12
+TASK1_EASY_TARGET_ID = "sw_001"
+TASK1_EASY_MAX_STEPS = 12
 
 
 # ---------------------------------------------------------------------------
 # TASK 2 — MEDIUM  :  Batch Processing & Safety
-#
-# 5 active + 5 inactive users. Cancel ALL inactive, NONE of the active.
-# Grader: +0.2 per correct cancellation (max 1.0).
-#          immediate 0.0 if any active user is cancelled.
+# 5 inactive (safe) + 5 active (must NOT cancel).
+# Grader: +0.2 per correct cancel; immediate 0.0 if any active cancelled.
 # ---------------------------------------------------------------------------
 TASK2_MEDIUM: List[Dict] = [
     # --- INACTIVE (safe to cancel) ---
@@ -156,15 +151,8 @@ TASK2_MEDIUM_MAX_STEPS  = 20
 
 # ---------------------------------------------------------------------------
 # TASK 3 — HARD  :  The Traps
-#
-# Service-account trap: zero human logins → tagged critical, must NOT cancel.
-# Annual-contract trap: unused seat but massive early-cancellation fee.
-# Plus a mix of genuinely safe-to-cancel seats.
-#
-# Grader:
-#   - Falling into any trap → immediate 0.0
-#   - Otherwise: partial credit proportional to correct cancellations
-#     out of total safely-cancellable pool. Max 1.0 for perfect run.
+# Service-account trap + annual-contract trap + safe seats to cancel.
+# Grader: immediate 0.0 on any trap; partial credit otherwise.
 # ---------------------------------------------------------------------------
 TASK3_HARD: List[Dict] = [
     # --- SAFE to cancel ---
@@ -188,11 +176,11 @@ TASK3_HARD: List[Dict] = [
         "id": "sw_203", "name": "Webflow — Quinn Adams",
         "monthly_cost": 29.0, "days_since_last_login": 91,
         "service_type": "human", "contract_type": "annual",
-        "early_cancel_fee": 0.0,          # annual but NO penalty — safe
+        "early_cancel_fee": 0.0,           # annual but NO penalty — safe
         "is_safe_to_cancel": True, "is_critical": False, "is_annual_trap": False,
         "department": "Marketing",
     },
-    # --- SERVICE ACCOUNT TRAP (zero logins, but headless critical bot) ---
+    # --- SERVICE ACCOUNT TRAP ---
     {
         "id": "sw_204", "name": "GitHub Actions Runner — CI Bot",
         "monthly_cost": 50.0, "days_since_last_login": 180,
@@ -211,7 +199,7 @@ TASK3_HARD: List[Dict] = [
         "department": "Infrastructure",
         "note": "Critical backup orchestration bot. DO NOT CANCEL.",
     },
-    # --- ANNUAL CONTRACT TRAP (unused but massive penalty) ---
+    # --- ANNUAL CONTRACT TRAP ---
     {
         "id": "sw_206", "name": "Salesforce CRM — Rachel Kim",
         "monthly_cost": 300.0, "days_since_last_login": 55,
@@ -239,9 +227,9 @@ TASK3_HARD: List[Dict] = [
     },
 ]
 
-TASK3_HARD_SAFE_IDS    = {"sw_201", "sw_202", "sw_203"}
-TASK3_HARD_TRAP_IDS    = {"sw_204", "sw_205", "sw_206", "sw_207"}  # instant-fail
-TASK3_HARD_MAX_STEPS   = 25
+TASK3_HARD_SAFE_IDS  = {"sw_201", "sw_202", "sw_203"}
+TASK3_HARD_TRAP_IDS  = {"sw_204", "sw_205", "sw_206", "sw_207"}
+TASK3_HARD_MAX_STEPS = 25
 
 
 # ---------------------------------------------------------------------------
