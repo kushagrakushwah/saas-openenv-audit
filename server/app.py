@@ -16,13 +16,12 @@ ROUTE MAP:
     GET  /info
 """
 from typing import Any, Dict, Optional
-
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from models import AuditAction, AuditObservation, AuditState
-from environment import AuditEnvironment
+from server.models import AuditAction, AuditObservation, AuditState
+from server.environment import EnvAudit
 
 app = FastAPI(
     title="EnvAudit — Corporate SaaS Red-Teaming Environment",

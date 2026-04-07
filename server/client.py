@@ -14,14 +14,12 @@ Usage (server must already be running):
         print(result.observation, result.reward, result.done)
 """
 from __future__ import annotations
-
 import contextlib
 from dataclasses import dataclass, field
 from typing import Any, Dict, Optional
-
 import requests
 
-from models import AuditAction, AuditObservation, AuditState
+from server.models import AuditAction, AuditObservation, AuditState
 
 
 @dataclass

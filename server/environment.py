@@ -14,10 +14,9 @@ import uuid
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Set
 
-from models import AuditAction, AuditObservation, AuditState
-from scenarios import SCENARIOS, MAX_STEPS, TASK_PROMPTS
-from graders import grade
-
+from server.models import AuditAction, AuditObservation, AuditState
+from server.scenarios import SCENARIOS, MAX_STEPS, TASK_PROMPTS
+from server.graders import grade
 
 AVAILABLE_TOOLS = [
     "get_employee_logins",

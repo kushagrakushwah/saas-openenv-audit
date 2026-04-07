@@ -11,8 +11,8 @@ Task 3 (Hard)   : immediate 0.0 if any trap is triggered; otherwise partial
 """
 from typing import Set
 
-from models import AuditState
-from scenarios import (
+from server.models import AuditState
+from server.scenarios import (
     TASK1_EASY_TARGET_ID,
     TASK2_MEDIUM_SAFE_IDS, TASK2_MEDIUM_ACTIVE_IDS,
     TASK3_HARD_SAFE_IDS, TASK3_HARD_TRAP_IDS,
