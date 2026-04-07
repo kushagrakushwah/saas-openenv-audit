@@ -21,7 +21,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from server.models import AuditAction, AuditObservation, AuditState
-from server.environment import EnvAudit
+from server.environment import AuditEnvironment 
 
 app = FastAPI(
     title="EnvAudit — Corporate SaaS Red-Teaming Environment",
