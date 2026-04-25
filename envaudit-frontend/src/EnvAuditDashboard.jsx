@@ -49,7 +49,7 @@ Format: {"tool":"<name>","parameters":{<params>},"reasoning":"<brief reason>"}`;
 
 // ─── Helper: call Hugging Face Router API ──────────────────────────────────────
 async function callAgent(messages) {
-  const HF_TOKEN = "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"; 
+  const HF_TOKEN = import.meta.env.VITE_HF_TOKEN; 
 
   try {
     const res = await fetch("/hf-router/v1/chat/completions", {
