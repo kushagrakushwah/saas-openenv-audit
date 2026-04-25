@@ -19,55 +19,57 @@ observation_space:
     done: "boolean"
     reward: "float"
 
-# The action space defined strictly as MCP tools
+# The action space defined strictly as MCP tools (Aligned with Frontend)
 tools:
-  - name: "get_employee_logins"
-    description: "Fetch mock IdP login activity to check for 60+ days of inactivity."
+  - name: "query_idp"
+    description: "Check user login activity (days active in last 30 days)"
     parameters:
       type: "object"
       properties:
-        employee_id: { type: "string" }
-      required: ["employee_id"]
+        user_id: { type: "string" }
+      required: ["user_id"]
 
-  - name: "get_billing_line_items"
-    description: "Fetch SaaS billing lines to see active charges."
+  - name: "query_billing"
+    description: "Get subscription cost data"
     parameters:
       type: "object"
       properties:
-        software_id: { type: "string" }
-      required: ["software_id"]
+        subscription_id: { type: "string" }
+      required: ["subscription_id"]
 
-  - name: "query_software_metadata"
-    description: "Check if a software ID belongs to a headless critical bot (service account)."
+  - name: "check_contract"
+    description: "Check contract type and cancellation fees to avoid annual-contract traps."
     parameters:
       type: "object"
       properties:
-        software_id: { type: "string" }
-      required: ["software_id"]
+        subscription_id: { type: "string" }
+      required: ["subscription_id"]
 
-  - name: "check_contract_terms"
-    description: "Check for the annual-contract trap and early-cancellation fees."
+  - name: "cancel_license"
+    description: "Cancel a licence — IRREVERSIBLE. Do not use on bots."
     parameters:
       type: "object"
       properties:
-        software_id: { type: "string" }
-      required: ["software_id"]
+        subscription_id: { type: "string" }
+        user_id: { type: "string" }
+      required: ["subscription_id", "user_id"]
 
-  - name: "execute_cancellation"
-    description: "Cancel a SaaS seat. Warning: Destructive action."
+  - name: "flag_for_review"
+    description: "Flag a subscription for human review (e.g., for annual contracts)."
     parameters:
       type: "object"
       properties:
-        software_id: { type: "string" }
-      required: ["software_id"]
+        subscription_id: { type: "string" }
+        reason: { type: "string" }
+      required: ["subscription_id", "reason"]
 
-  - name: "finish_audit" # Changed from 'finish' to avoid reserved keyword conflicts
-    description: "Conclude the audit episode."
+  - name: "finish_audit" 
+    description: "Signal completion — terminates the episode"
     parameters:
       type: "object"
       properties: {}
 
-# Your custom environment metadata (Safe to include here)
+# Your custom environment metadata
 metadata:
   tasks:
     - name: task1_easy
