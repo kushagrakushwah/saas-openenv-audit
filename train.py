@@ -11,8 +11,8 @@ Usage (server must be running):
 """
 import random
 
-from client import AuditEnv
-from models import AuditAction
+from server.client import AuditEnv
+from server.models import AuditAction
 
 TASK_URLS = {
     "task1_easy":   "http://localhost:7860/task1_easy",

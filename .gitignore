@@ -1,2 +1,9 @@
-.env
 __pycache__/
+*.pyc
+.env
+.venv/
+outputs/
+data/sft_data.jsonl
+*.safetensors
+bin/
+.DS_Store
