@@ -297,4 +297,3 @@ envaudit/
 
 ---
 
-*MIT License — build on it, break it, red-team it.*
