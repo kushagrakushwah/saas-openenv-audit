@@ -1,6 +1,6 @@
 # We Trained a 7B Model to Stop Destroying Production Infrastructure
 
-*A devlog from the Meta × Scaler OpenEnv Hackathon 2025, Bangalore.*
+*A devlog from the Meta × Scaler OpenEnv Hackathon 2026, Bangalore.*
 *Written at approximately 4:30 AM by people who should have slept.*
 
 *Kushagra Singh Kushwah and Raj Patil*
@@ -201,7 +201,7 @@ And the +0.020 on Task 3 should become +0.5. The model knows the right answer. I
 
 ---
 
-*EnvAudit · Meta × Scaler OpenEnv Hackathon 2025 · Bangalore*
+*EnvAudit · Meta × Scaler OpenEnv Hackathon 2026 · Bangalore*
 
 *Model: [kushagrakushwah/envaudit-qwen-7b-sft](https://huggingface.co/kushagrakushwah/envaudit-qwen-7b-sft)*
 *GRPO Training: [Raj's Kaggle Notebook](https://www.kaggle.com/code/rajpatil01/final-grpo)*
