@@ -1,6 +1,6 @@
 # EnvAudit: System Architecture
 
-*Meta × Scaler OpenEnv Hackathon 2025 · Theme #3.1 — Professional Tasks*
+*Meta × Scaler OpenEnv Hackathon 2026 · Theme #3.1 — Professional Tasks*
 *Kushagra Singh Kushwah · Raj Patil*
 
 ---
@@ -291,7 +291,7 @@ EnvAudit is a benchmark. But the design reflects a deployment pattern that a rea
 
 ---
 
-*EnvAudit · Meta × Scaler OpenEnv Hackathon 2025 · Bangalore*
+*EnvAudit · Meta × Scaler OpenEnv Hackathon 2026 · Bangalore*
 
 *GRPO Training: [Kaggle — rajpatil01/final-grpo](https://www.kaggle.com/code/rajpatil01/final-grpo)*
 *Evaluation: [Google Colab](https://colab.research.google.com/drive/1pMSBR8aASMvULXHbKb-lp1-6BrekDEee?usp=sharing)*
