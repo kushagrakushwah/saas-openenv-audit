@@ -3,7 +3,7 @@
 
 <div align="center">
 
-![Meta × Scaler OpenEnv Hackathon 2025](https://img.shields.io/badge/Meta%20×%20Scaler-OpenEnv%20Hackathon%202025-blue?style=for-the-badge)
+![Meta × Scaler OpenEnv Hackathon 2026](https://img.shields.io/badge/Meta%20×%20Scaler-OpenEnv%20Hackathon%202026-blue?style=for-the-badge)
 ![Theme](https://img.shields.io/badge/Theme%20%233.1-Professional%20Tasks-orange?style=for-the-badge)
 ![Model](https://img.shields.io/badge/Model-Qwen2.5--7B%20+%20GRPO-green?style=for-the-badge)
 
