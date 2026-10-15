@@ -5,7 +5,7 @@
 import { useState, useRef, useEffect } from "react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const ENV_URL = "http://localhost:8000"; 
+const ENV_URL = "https://kushagrakushwah-saas-audit-env.hf.space"; 
 
 const TOOL_COLORS = {
   query_idp:       "#4ade80",
